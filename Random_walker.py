@@ -87,7 +87,7 @@ class DataPrep:
         pass
 
 
-class Uniform_kde():
+class Uniform_kde:
     """Duck coded KDE. Helper."""
 
     def __init__(self, lower=0.0, upper=2.0*np.pi):
@@ -111,7 +111,7 @@ class Uniform_kde():
 #            return np.random.choice([-1, 1])
 
 
-class RandomWalker_lattice():
+class RandomWalker_lattice:
     """Random Walker on a lattice."""
 
     def __init__(self, x=0, y=0, time=0.0,
@@ -163,7 +163,7 @@ class RandomWalker_lattice():
         return x, y, r2
 
 
-class RandomWalker_2D():
+class RandomWalker_2D:
     """Physical random walk in 2D."""
 
     def __init__(self, jump_kde, x=0.0, y=0.0, time=0, waiting_time_kde=None,
@@ -350,7 +350,7 @@ class RandomWalker_2D():
 #         return x, y, r2
 
 
-class CTRandomWalk():
+class CTRandomWalk:
     """Continuous time random walk."""
 
     def __init__(self, Walker, n_walkers=1, init_time=0.0,
@@ -367,8 +367,24 @@ class CTRandomWalk():
         self.MSD = [np.mean([x.get_squared_displacement()
                             for x in self.walker_list])]
 
-    def __get_time_jump(self):
-        return np.random.randint(100)
+    def __get_time_jump(self, time):
+        """
+        Return random number between 0 and time/2.
+
+        Waiting times should not be greater than the observation time.
+
+        Parameters
+        ----------
+        time : float or int
+            The maximum time window.
+
+        Returns
+        -------
+        int
+            Random number.
+
+        """
+        return np.random.randint(time/2)
 
     def __fill_states(self, states):
         filled_states = []
@@ -402,19 +418,31 @@ class CTRandomWalk():
                 self.__update_walker_list(self.p_branch, self.p_annih)
 
                 w.step()
-                t = w.t + self.__get_time_jump()
+                t = w.t + self.__get_time_jump(maxtime)
                 w.set_time(t)
 
                 states.append((w.x, w.y, w.t, w.get_squared_displacement()))
 
             walker_states.append(self.__fill_states(states))
-        print(walker_states)
+
+        walker_states = self.__equalize_lengths(walker_states)
+        # print(walker_states)
 
         self.MSD = self.average_walker_MSDs(walker_states)
 
+    def __equalize_lengths(self, states):
+        """Equalize the lengths of multiple random walk trajectories."""
+        min_length = len(min(states, key=len))
+        equalized_length = []
+        for walker in states:
+            equalized_length.append(walker[:min_length])
+
+        return equalized_length
+
     def average_walker_MSDs(self, states):
         """Average trajectories over all walkers."""
-        pass
+        average_over_walkers = np.mean(states, axis=0)
+        return [m[3] for m in average_over_walkers]
 
     def __update_walker_list(self, p_branch=0.01, p_annihilate=0.01):
         """Random walker duplicates itself during the random walk."""
@@ -454,7 +482,7 @@ class CTRandomWalk():
         return LM.coef_[0]/4.0
 
 
-class RandomWalk():
+class RandomWalk:
     """Random Walk."""
 
     def __init__(self, Walker, n_walkers=1, init_time=0.0,
@@ -537,12 +565,11 @@ if __name__ == "__main__":
     # print(d.get_incidence())
 
     W = RandomWalker_2D(jump_kde)
-    # tra = W.CTRW(1000)
-    R = CTRandomWalk(W)
-    R.run(100)
-    print(R.MSD)
-
-    # plt.plot(t, mse)
+    R = CTRandomWalk(W, n_walkers=100)
+    R.run(1000)
+    mse = R.MSD
+    print("Diffusion constant =", R.estimate_D())
+    plt.plot(mse)
 
 #    W = RandomWalker_lattice()
 #    R = RandomWalk(W, n_walkers=100, branching_probability=None,
