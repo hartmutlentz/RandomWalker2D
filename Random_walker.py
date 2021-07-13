@@ -99,18 +99,6 @@ class Uniform_kde:
         return np.random.uniform(self.a, self.b)
 
 
-# class Lattice_step_kde():
-#    def __init__(self, stay=True):
-#        """Duck coded KDE. Helper."""
-#        self.stay = stay
-#
-#    def resample(self, n):
-#        if self.stay:
-#            return np.random.choice([-1, 0, 1])
-#        else:
-#            return np.random.choice([-1, 1])
-
-
 class RandomWalker_lattice:
     """Random Walker on a lattice."""
 
@@ -197,38 +185,6 @@ class RandomWalker_2D:
                                self.waiting_time_kde, self.orientation,
                                self.angle_kde)
 
-    # def CTRW(self, maxtime=100):
-    #     """Continuous time random walk."""
-    #     def get_time_jump():
-    #         return np.random.randint(100)
-
-    #     def fill_states(states):
-    #         #
-    #         filled_states = []
-
-    #         state = states.pop(0)
-    #         t = state[2]
-
-    #         while states:
-    #             nextstate = states.pop(0)
-    #             for i in range(state[2], nextstate[2]):
-    #                 filled_states.append((state[0], state[1], t, state[3]))
-    #                 t += 1
-    #             state = nextstate
-
-    #         return filled_states
-
-    #     t = 0
-    #     states = [(self.x, self.y, t, self.get_squared_displacement())]
-
-    #     while t < maxtime:
-    #         t += get_time_jump()
-    #         self.step()
-    #         states.append((self.x, self.y, t,
-    #                       self.get_squared_displacement()))
-
-    #     return fill_states(states)
-
     def step(self):
         """Step."""
         stepsize = self.jump_kde.resample(1)[0][0]
@@ -256,98 +212,6 @@ class RandomWalker_2D:
             r2.append(self.get_squared_displacement())
 
         return x, y, r2
-
-
-# class CTRW_Walker_2D():
-#     """Physical continuous time random walk in 2D."""
-
-#     def __init__(self, jump_kde, x=0.0, y=0.0, time=0.0,
-#                  time_resolution=0.1, waiting_time_kde=None,
-#                  orientation=None, angle_kde=None):
-
-#         self.x = x
-#         self.y = y
-#         self.jump_kde = jump_kde
-#         self.t = time
-#         self.dt = time_resolution
-
-#         self.waiting_time_kde = waiting_time_kde
-#         if orientation:
-#             self.orientation = orientation
-#         else:
-#             self.orientation = np.random.uniform(0.0, 2.0*np.pi)
-#         if angle_kde:
-#             self.angle_kde = angle_kde
-#         else:
-#             self.angle_kde = Uniform_kde()
-
-#         self.squared_displacement = self.get_squared_displacement()
-
-#     def copy(self):
-#         """Copy."""
-#         return CTRW_Walker_2D(self.jump_kde, self.x, self.y, self.t, self.dt,
-#                               self.waiting_time_kde, self.orientation,
-#                               self.angle_kde)
-
-#     def __get_time_jump(self):
-#         return np.random.randint(100)
-
-#     def __fill_states(self, states):
-#         """pass."""
-#         filled_states = []
-
-#         state = states.pop(0)
-#         t = state[2]
-
-#         while states:
-#             nextstate = states.pop(0)
-#             for i in range(state[2], nextstate[2]):
-#                 filled_states.append((state[0], state[1], t, state[3]))
-#                 t += 1
-#             state = nextstate
-
-#         return filled_states
-
-#     def CTRW(self, maxtime=100):
-#         """Continuous time random walk."""
-#         t = 0
-#         states = [(self.x, self.y, t, self.get_squared_displacement())]
-
-#         while t < maxtime:
-#             t += self.__get_time_jump()
-#             self.step()
-#             states.append((self.x, self.y, t,
-#                           self.get_squared_displacement()))
-
-#         return self.__fill_states(states)
-
-#     def step(self):
-#         """Step."""
-#         stepsize = self.jump_kde.resample(1)[0][0]
-#         course = self.angle_kde.resample(1)
-
-#         dy = np.sin(course) * stepsize
-#         dx = np.cos(course) * stepsize
-
-#         self.x += dx
-#         self.y += dy
-#         self.squared_displacement = self.get_squared_displacement()
-#         self.t += self.dt
-
-#     def get_squared_displacement(self):
-#         """Squared displacement."""
-#         return self.x ** 2 + self.y ** 2
-
-#     def sample_trajectory(self, n=100):
-#         """Random walk over n steps."""
-#         x, y, r2 = [], [], []
-#         for i in range(n):
-#             self.step()
-#             x.append(self.x)
-#             y.append(self.y)
-#             r2.append(self.get_squared_displacement())
-
-#         return x, y, r2
 
 
 class CTRandomWalk:
@@ -418,7 +282,7 @@ class CTRandomWalk:
                 self.__update_walker_list(self.p_branch, self.p_annih)
 
                 w.step()
-                t = w.t + self.__get_time_jump(maxtime)
+                t = w.t + self.__get_time_jump(80)
                 w.set_time(t)
 
                 states.append((w.x, w.y, w.t, w.get_squared_displacement()))
@@ -565,8 +429,8 @@ if __name__ == "__main__":
     # print(d.get_incidence())
 
     W = RandomWalker_2D(jump_kde)
-    R = CTRandomWalk(W, n_walkers=100)
-    R.run(1000)
+    R = CTRandomWalk(W, n_walkers=10000)
+    R.run(100)
     mse = R.MSD
     print("Diffusion constant =", R.estimate_D())
     plt.plot(mse)
