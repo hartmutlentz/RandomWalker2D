@@ -13,80 +13,6 @@ from sklearn.linear_model import LinearRegression
 import matplotlib.pyplot as plt
 
 
-class DataPrep:
-    """Prepare data."""
-
-    def __init__(self, fname):
-        self.t_xy = self.read_data(fname)
-        self.incidence_sparse = self.get_incidence_sparse()
-
-    def new_cases_per_day(self):
-        """Pass."""
-        pass
-
-    def get_incidence_sparse(self):
-        """
-        Return the incidence per day.
-
-        Returns
-        -------
-        dict
-            keys-time, values-incidence.
-
-        """
-        return {t: len(self.t_xy[t]) for t in self.t_xy}
-
-    def get_incidence(self):
-        """
-        Return incidence as array.
-
-        Returns
-        -------
-        x : np.array
-            Incidence.
-
-        """
-        x = np.zeros(max(self.incidence_sparse.keys())+1, dtype=np.int)
-        for key in self.incidence_sparse:
-            x[key] = self.incidence_sparse[key]
-
-        return x
-
-    def read_data(self, fname):
-        """Read the Data."""
-        coords = np.loadtxt(fname, delimiter=",", usecols=(0, 1))
-        times = np.loadtxt(fname, delimiter=",", usecols=(2,), dtype=np.int)
-
-        t_xy = defaultdict(list)
-        for i in range(len(times)):
-            t_xy[times[i]].append((coords[i][0], coords[i][1]))
-
-        return t_xy
-
-    def shuffle_inputs(self):
-        """Pass."""
-        pass
-
-    def get_position_sequence(self):
-        """Pass."""
-        pass
-
-    def get_jump_dist(self):
-        """Pass."""
-        pass
-
-    def get_waiting_time_dist(self):
-        """
-        pass.
-
-        Returns
-        -------
-        None.
-
-        """
-        pass
-
-
 class Uniform_kde_float:
     """Duck coded KDE. Helper."""
 
@@ -188,7 +114,7 @@ class RandomWalker_2D:
 
     def set_time(self, new_time):
         """
-        Set new time.
+        Setter for new time.
 
         This is relevant for CTRWs.
         """
@@ -218,6 +144,8 @@ class RandomWalker_2D:
 
     def sample_trajectory(self, n=100):
         """Random walk over n steps."""
+        assert type(n) == int, "Number of steps must be of integer type."
+
         x, y, r2 = [], [], []
         for i in range(n):
             self.step()
@@ -243,7 +171,6 @@ class CTRandomWalk:
         self.walker_list = [Walker.copy() for i in range(n_walkers)]
 
         self.t = init_time
-        # self.squared_displacements = []
         self.MSD = [np.mean([x.get_squared_displacement()
                             for x in self.walker_list])]
 
@@ -283,14 +210,15 @@ class CTRandomWalk:
 
         return filled_states
 
-    def __time_lt_maxtime(self, maxtime):
-        return any([w.t < maxtime for w in self.walker_list])
+    # def __time_lt_maxtime(self, maxtime):
+    #     return any([w.t < maxtime for w in self.walker_list])
 
     def run(self, maxtime=100, verbose=False):
         """Perform a CTRW."""
         verboseprint = print if verbose else lambda *a, **k: None
 
         walker_states = []
+
         for w in self.walker_list:
             states = [(w.x, w.y, w.t, w.get_squared_displacement())]
             while w.t < maxtime:
@@ -348,6 +276,45 @@ class CTRandomWalk:
                     annihil_list.append(w)
             for w in annihil_list:
                 self.walker_list.remove(w)
+
+    def sample_trajectory(self, maxtime=1000):
+        """
+        Perform a single random walk (CTRW).
+
+        Parameters
+        ----------
+        maxtime : int, optional
+            Maximum runtime. The default is 1000.
+
+        Returns
+        -------
+        x : list
+            x-coordinates vs. time.
+        y : list
+            y-coordinates vs. time.
+        r2 : list
+            squared displacement vs. time.
+
+        """
+        assert type(maxtime) == int, "Time must be of integer type."
+        x, y, r2 = [], [], []
+        t = 0
+        w = self.walker_list[0].copy()
+
+        x.append(w.x)
+        y.append(w.y)
+        r2.append(w.get_squared_displacement())
+
+        while t < maxtime:
+            w.step()
+            t = w.t + self.waiting_time_kde.resample(1)
+            w.set_time(t)
+
+            x.append(w.x)
+            y.append(w.y)
+            r2.append(w.get_squared_displacement())
+
+        return x, y, r2
 
     def estimate_D(self):
         """
@@ -439,10 +406,84 @@ class RandomWalk:
         return LM.coef_[0]/4.0
 
 
+class DataPrep:
+    """Prepare data."""
+
+    def __init__(self, fname):
+        self.t_xy = self.read_data(fname)
+        self.incidence_sparse = self.get_incidence_sparse()
+
+    def new_cases_per_day(self):
+        """Pass."""
+        pass
+
+    def get_incidence_sparse(self):
+        """
+        Return the incidence per day.
+
+        Returns
+        -------
+        dict
+            keys-time, values-incidence.
+
+        """
+        return {t: len(self.t_xy[t]) for t in self.t_xy}
+
+    def get_incidence(self):
+        """
+        Return incidence as array.
+
+        Returns
+        -------
+        x : np.array
+            Incidence.
+
+        """
+        x = np.zeros(max(self.incidence_sparse.keys())+1, dtype=np.int)
+        for key in self.incidence_sparse:
+            x[key] = self.incidence_sparse[key]
+
+        return x
+
+    def read_data(self, fname):
+        """Read the Data."""
+        coords = np.loadtxt(fname, delimiter=",", usecols=(0, 1))
+        times = np.loadtxt(fname, delimiter=",", usecols=(2,), dtype=np.int)
+
+        t_xy = defaultdict(list)
+        for i in range(len(times)):
+            t_xy[times[i]].append((coords[i][0], coords[i][1]))
+
+        return t_xy
+
+    def shuffle_inputs(self):
+        """Pass."""
+        pass
+
+    def get_position_sequence(self):
+        """Pass."""
+        pass
+
+    def get_jump_dist(self):
+        """Pass."""
+        pass
+
+    def get_waiting_time_dist(self):
+        """
+        pass.
+
+        Returns
+        -------
+        None.
+
+        """
+        pass
+
+
 if __name__ == "__main__":
     jump_measurements = [1.5, 1.5, 1.3, 1.6, 2.3, 4., 3.2, 1.8, 1.45]
     jump_kde = gaussian_kde(jump_measurements, bw_method=1e-1)
-    waiting_kde = Uniform_kde_int(0, 5)
+    waiting_kde = Uniform_kde_int(0, 10)
     # jump_kde = gaussian_kde(x)
     # d = DataPrep("test.txt")
     # print(d.t_xy)
@@ -453,7 +494,7 @@ if __name__ == "__main__":
     R.run(10)
     mse = R.MSD
     print("Diffusion constant =", R.estimate_D())
-    plt.plot(mse)
+    # plt.plot(mse)
 
 #    W = RandomWalker_lattice()
 #    R = RandomWalk(W, n_walkers=100, branching_probability=None,
@@ -463,5 +504,5 @@ if __name__ == "__main__":
 #    print("Diffusion constant =", R.estimate_D())
 
 #    plt.plot(R.MSD)
-#    x, y, _ = W.sample_trajectory()
-#    plt.plot(x, y)
+    x, y, r2 = R.sample_trajectory(1000)
+    plt.plot(x, y)
