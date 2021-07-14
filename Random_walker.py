@@ -87,7 +87,7 @@ class DataPrep:
         pass
 
 
-class Uniform_kde:
+class Uniform_kde_float:
     """Duck coded KDE. Helper."""
 
     def __init__(self, lower=0.0, upper=2.0*np.pi):
@@ -99,17 +99,29 @@ class Uniform_kde:
         return np.random.uniform(self.a, self.b)
 
 
+class Uniform_kde_int:
+    """Duck coded KDE. Helper."""
+
+    def __init__(self, lower=0, upper=10):
+        self.a = lower
+        self.b = upper
+
+    def resample(self, n):
+        """KDE resample method."""
+        return np.random.randint(self.a, self.b)
+
+
 class RandomWalker_lattice:
     """Random Walker on a lattice."""
 
     def __init__(self, x=0, y=0, time=0.0,
-                 time_resolution=0.1, waiting_time_kde=None):
+                 time_resolution=0.1):
 
         self.x = int(x)
         self.y = int(y)
         self.t = time
         self.dt = time_resolution
-        self.waiting_time_kde = waiting_time_kde
+        # self.waiting_time_kde = waiting_time_kde
 
         self.squared_displacement = self.get_squared_displacement()
 
@@ -154,7 +166,7 @@ class RandomWalker_lattice:
 class RandomWalker_2D:
     """Physical random walk in 2D."""
 
-    def __init__(self, jump_kde, x=0.0, y=0.0, time=0, waiting_time_kde=None,
+    def __init__(self, jump_kde, x=0.0, y=0.0, time=0,
                  orientation=None, angle_kde=None):
 
         self.x = x
@@ -163,7 +175,6 @@ class RandomWalker_2D:
         self.t = time
         # self.dt = time_resolution
 
-        self.waiting_time_kde = waiting_time_kde
         if orientation:
             self.orientation = orientation
         else:
@@ -171,19 +182,22 @@ class RandomWalker_2D:
         if angle_kde:
             self.angle_kde = angle_kde
         else:
-            self.angle_kde = Uniform_kde()
+            self.angle_kde = Uniform_kde_float(lower=0.0, upper=2.0*np.pi)
 
         self.squared_displacement = self.get_squared_displacement()
 
     def set_time(self, new_time):
-        """Set new time."""
+        """
+        Set new time.
+
+        This is relevant for CTRWs.
+        """
         self.t = new_time
 
     def copy(self):
         """Copy."""
         return RandomWalker_2D(self.jump_kde, self.x, self.y, self.t,
-                               self.waiting_time_kde, self.orientation,
-                               self.angle_kde)
+                               self.orientation, self.angle_kde)
 
     def step(self):
         """Step."""
@@ -217,10 +231,12 @@ class RandomWalker_2D:
 class CTRandomWalk:
     """Continuous time random walk."""
 
-    def __init__(self, Walker, n_walkers=1, init_time=0.0,
+    def __init__(self, Walker, waiting_time_kde, n_walkers=1,
+                 init_time=0.0,
                  branching_probability=None,
                  annihilation_probability=None):
 
+        self.waiting_time_kde = waiting_time_kde
         self.p_branch = branching_probability
         self.p_annih = annihilation_probability
 
@@ -235,7 +251,9 @@ class CTRandomWalk:
         """
         Return random number between 0 and time/2.
 
-        Waiting times should not be greater than the observation time.
+        This is a temporary method. Waiting time distribution should be set on
+        instantiation. Waiting times should not be greater than the observation
+        time.
 
         Parameters
         ----------
@@ -282,7 +300,8 @@ class CTRandomWalk:
                 self.__update_walker_list(self.p_branch, self.p_annih)
 
                 w.step()
-                t = w.t + self.__get_time_jump(80)
+                # t = w.t + self.__get_time_jump(80)
+                t = w.t + self.waiting_time_kde.resample(1)
                 w.set_time(t)
 
                 states.append((w.x, w.y, w.t, w.get_squared_displacement()))
@@ -423,14 +442,15 @@ class RandomWalk:
 if __name__ == "__main__":
     jump_measurements = [1.5, 1.5, 1.3, 1.6, 2.3, 4., 3.2, 1.8, 1.45]
     jump_kde = gaussian_kde(jump_measurements, bw_method=1e-1)
+    waiting_kde = Uniform_kde_int(0, 5)
     # jump_kde = gaussian_kde(x)
     # d = DataPrep("test.txt")
     # print(d.t_xy)
     # print(d.get_incidence())
 
     W = RandomWalker_2D(jump_kde)
-    R = CTRandomWalk(W, n_walkers=10000)
-    R.run(100)
+    R = CTRandomWalk(W, waiting_time_kde=waiting_kde, n_walkers=1)
+    R.run(10)
     mse = R.MSD
     print("Diffusion constant =", R.estimate_D())
     plt.plot(mse)
