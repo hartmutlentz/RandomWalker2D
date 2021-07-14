@@ -6,5 +6,5 @@
  2. Instantiate a ```RandomWalk``` object. This object performs the random walk itself. It can also handle multiple walkers, branching and annihilation phenomena.
 
  # To Do list
- - [] Write base class ```RandomWalker``` and inherit to ```RandomWalker2D``` and ```LatticeWalker2D```
- - [] Write base class ```RandomWalk``` and inherit to the others.
+ [] Write base class ```RandomWalker``` and inherit to ```RandomWalker2D``` and ```LatticeWalker2D```
+ [] Write base class ```RandomWalk``` and inherit to the others.
