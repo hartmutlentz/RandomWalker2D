@@ -281,6 +281,9 @@ class CTRandomWalk:
         """
         Perform a single random walk (CTRW).
 
+        This method is for demonstration purposes and the states of the walkers
+        in the walker list are not changed.
+
         Parameters
         ----------
         maxtime : int, optional
@@ -297,22 +300,22 @@ class CTRandomWalk:
 
         """
         assert type(maxtime) == int, "Time must be of integer type."
-        x, y, r2 = [], [], []
+
+        states = list()
         t = 0
         w = self.walker_list[0].copy()
 
-        x.append(w.x)
-        y.append(w.y)
-        r2.append(w.get_squared_displacement())
+        states.append((w.x, w.y, w.t, w.get_squared_displacement()))
 
         while t < maxtime:
             w.step()
             t = w.t + self.waiting_time_kde.resample(1)
             w.set_time(t)
 
-            x.append(w.x)
-            y.append(w.y)
-            r2.append(w.get_squared_displacement())
+            states.append((w.x, w.y, w.t, w.get_squared_displacement()))
+
+        states = self.__fill_states(states)
+        x, y, _, r2 = zip(*states)
 
         return x, y, r2
 
