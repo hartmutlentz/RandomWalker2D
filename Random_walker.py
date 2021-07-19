@@ -13,7 +13,7 @@ from sklearn.linear_model import LinearRegression
 import matplotlib.pyplot as plt
 
 
-class Uniform_kde_float:
+class UniformKdeFloat:
     """Duck coded KDE. Helper."""
 
     def __init__(self, lower=0.0, upper=2.0*np.pi):
@@ -25,7 +25,7 @@ class Uniform_kde_float:
         return np.random.uniform(self.a, self.b)
 
 
-class Uniform_kde_int:
+class UniformKdeInt:
     """Duck coded KDE. Helper."""
 
     def __init__(self, lower=0, upper=10):
@@ -37,7 +37,7 @@ class Uniform_kde_int:
         return np.random.randint(self.a, self.b)
 
 
-class RandomWalker_lattice:
+class RandomWalkerLattice:
     """Random Walker on a lattice."""
 
     def __init__(self, x=0, y=0, time=0.0,
@@ -57,8 +57,8 @@ class RandomWalker_lattice:
 
     def copy(self):
         """Copy."""
-        return RandomWalker_lattice(self.x, self.y, self.t,
-                                    self.dt, self.waiting_time_kde)
+        return RandomWalkerLattice(self.x, self.y, self.t,
+                                   self.dt)
 
     def step(self):
         """Random walk step."""
@@ -89,7 +89,7 @@ class RandomWalker_lattice:
         return x, y, r2
 
 
-class RandomWalker_2D:
+class RandomWalker2D:
     """Physical random walk in 2D."""
 
     def __init__(self, jump_kde, x=0.0, y=0.0, time=0,
@@ -108,7 +108,7 @@ class RandomWalker_2D:
         if angle_kde:
             self.angle_kde = angle_kde
         else:
-            self.angle_kde = Uniform_kde_float(lower=0.0, upper=2.0*np.pi)
+            self.angle_kde = UniformKdeFloat(lower=0.0, upper=2.0*np.pi)
 
         self.squared_displacement = self.get_squared_displacement()
 
@@ -122,8 +122,8 @@ class RandomWalker_2D:
 
     def copy(self):
         """Copy."""
-        return RandomWalker_2D(self.jump_kde, self.x, self.y, self.t,
-                               self.orientation, self.angle_kde)
+        return RandomWalker2D(self.jump_kde, self.x, self.y, self.t,
+                              self.orientation, self.angle_kde)
 
     def step(self):
         """Step."""
@@ -168,7 +168,7 @@ class CTRandomWalk:
         self.p_branch = branching_probability
         self.p_annih = annihilation_probability
 
-        self.walker_list = [Walker.copy() for i in range(n_walkers)]
+        self.walker_list = [Walker.copy() for _ in range(n_walkers)]
 
         self.t = init_time
         self.MSD = [np.mean([x.get_squared_displacement()
@@ -342,7 +342,7 @@ class RandomWalk:
         self.p_branch = branching_probability
         self.p_annih = annihilation_probability
 
-        self.walker_list = [Walker.copy() for i in range(n_walkers)]
+        self.walker_list = [Walker.copy() for _ in range(n_walkers)]
 
         self.t = init_time
         # self.squared_displacements = []
@@ -483,13 +483,13 @@ class DataPrep:
 if __name__ == "__main__":
     jump_measurements = [1.5, 1.5, 1.3, 1.6, 2.3, 4., 3.2, 1.8, 1.45]
     jump_kde = gaussian_kde(jump_measurements, bw_method=1e-1)
-    waiting_kde = Uniform_kde_int(0, 10)
+    waiting_kde = UniformKdeInt(0, 10)
     # jump_kde = gaussian_kde(x)
     # d = DataPrep("test.txt")
     # print(d.t_xy)
     # print(d.get_incidence())
 
-    W = RandomWalker_2D(jump_kde)
+    W = RandomWalker2D(jump_kde)
     R = CTRandomWalk(W, waiting_time_kde=waiting_kde, n_walkers=1)
     R.run(10)
     mse = R.MSD
