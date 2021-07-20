@@ -13,6 +13,34 @@ from sklearn.linear_model import LinearRegression
 import matplotlib.pyplot as plt
 
 
+class EmpiricalDistribution:
+    """ Duck coded distribution.
+
+        Ensures that the returned value is non negative.
+    """
+
+    def __init__(self, kde):
+        """
+        Parameters
+        ----------
+        kde
+            scipy.stats.gaussian_kde instance
+
+        Returns
+        -------
+        EmpiricalDistribution
+        """
+        self.kde = kde
+
+    def resample(self, n):
+        x = self.kde.resample(1)[0]
+
+        while x < 0.0:
+            x = self.kde.resample(1)[0]
+
+        return x
+
+
 class UniformKdeFloat:
     """Duck coded KDE. Helper."""
 
@@ -174,7 +202,8 @@ class CTRandomWalk:
         self.MSD = [np.mean([x.get_squared_displacement()
                             for x in self.walker_list])]
 
-    def __get_time_jump(self, time):
+    @staticmethod
+    def __get_time_jump(time):
         """
         Return random number between 0 and time/2.
 
@@ -195,7 +224,8 @@ class CTRandomWalk:
         """
         return np.random.randint(time/2)
 
-    def __fill_states(self, states):
+    @staticmethod
+    def __fill_states(states):
         filled_states = []
 
         state = states.pop(0)
@@ -241,7 +271,8 @@ class CTRandomWalk:
 
         self.MSD = self.average_walker_MSDs(walker_states)
 
-    def __equalize_lengths(self, states):
+    @staticmethod
+    def __equalize_lengths(states):
         """Equalize the lengths of multiple random walk trajectories."""
         min_length = len(min(states, key=len))
         equalized_length = []
@@ -250,7 +281,8 @@ class CTRandomWalk:
 
         return equalized_length
 
-    def average_walker_MSDs(self, states):
+    @staticmethod
+    def average_walker_MSDs(states):
         """Average trajectories over all walkers."""
         average_over_walkers = np.mean(states, axis=0)
         return [m[3] for m in average_over_walkers]
@@ -448,7 +480,8 @@ class DataPrep:
 
         return x
 
-    def read_data(self, fname):
+    @staticmethod
+    def read_data(fname):
         """Read the Data."""
         coords = np.loadtxt(fname, delimiter=",", usecols=(0, 1))
         times = np.loadtxt(fname, delimiter=",", usecols=(2,), dtype=np.int)
