@@ -2,3 +2,5 @@
 .ipynb_checkpoints/Demo-checkpoint.ipynb
 __pycache__/Random_walker.cpython-37.pyc
 *.pyc
+*.xml
+*.iml
