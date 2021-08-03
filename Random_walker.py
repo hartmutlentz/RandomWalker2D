@@ -41,6 +41,32 @@ class EmpiricalDistribution:
         return x
 
 
+class EmpiricalDistributionInt:
+    """ Duck coded distribution.
+
+        Sample values from histogram.
+    """
+
+    def __init__(self, data):
+        """
+        Parameters
+        ----------
+        data
+            numpy array containing integer numbers
+
+        Returns
+        -------
+        EmpiricalDistribution
+        """
+        v, c = np.unique(data.astype(int), return_counts=True)
+
+        self.vals = v
+        self.counts = c / c.sum()
+
+    def resample(self, n):
+        return np.array([np.random.choice(self.vals, p=self.counts)])
+
+
 class UniformKdeFloat:
     """Duck coded KDE. Helper."""
 
