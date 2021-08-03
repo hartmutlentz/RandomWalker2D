@@ -275,17 +275,19 @@ class CTRandomWalk:
 
         walker_states = []
 
-        for w in self.walker_list:
+        for i, w in enumerate(self.walker_list):
             states = [(w.x, w.y, w.t, w.get_squared_displacement())]
+            verboseprint("Walker ", i, end=" ")
+
             while w.t < maxtime:
-                verboseprint("Processing t=", w.t, " of ", maxtime, "with ",
-                             len(self.walker_list), " walkers.")
+                # verboseprint("Processing t=", w.t, " of ", maxtime, "with ",
+                #             len(self.walker_list), " walkers.")
 
                 self.__update_walker_list(self.p_branch, self.p_annih)
 
                 w.step()
                 # t = w.t + self.__get_time_jump(80)
-                t = w.t + round(self.waiting_time_kde.resample(1))
+                t = w.t + round(self.waiting_time_kde.resample(1)[0])
                 w.set_time(t)
 
                 states.append((w.x, w.y, w.t, w.get_squared_displacement()))
@@ -367,7 +369,7 @@ class CTRandomWalk:
 
         while t < maxtime:
             w.step()
-            t = w.t + self.waiting_time_kde.resample(1)
+            t = w.t + round(self.waiting_time_kde.resample(1)[0])
             w.set_time(t)
 
             states.append((w.x, w.y, w.t, w.get_squared_displacement()))
