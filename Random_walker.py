@@ -42,9 +42,10 @@ class EmpiricalDistribution:
 
 
 class EmpiricalDistributionInt:
-    """ Duck coded distribution.
+    """
+    Duck coded distribution.
 
-        Sample values from histogram.
+    Sample values from histogram.
     """
 
     def __init__(self, data):
@@ -64,6 +65,7 @@ class EmpiricalDistributionInt:
         self.counts = c / c.sum()
 
     def resample(self, n):
+        """Return a sample."""
         return np.array([np.random.choice(self.vals, p=self.counts)])
 
 
