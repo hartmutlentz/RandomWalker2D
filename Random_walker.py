@@ -289,7 +289,7 @@ class CTRandomWalk:
 
                 w.step()
                 # t = w.t + self.__get_time_jump(80)
-                t = w.t + round(self.waiting_time_kde.resample(1)[0])
+                t = w.t + self.waiting_time_kde.resample(1)[0]
                 w.set_time(t)
 
                 states.append((w.x, w.y, w.t, w.get_squared_displacement()))
