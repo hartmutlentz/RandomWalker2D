@@ -381,14 +381,18 @@ class CTRandomWalk:
 
         return x, y, r2
 
-    def estimate_D(self):
+    def estimate_D(self, timepoints=None):
         """
         D is the diffusion constant.
 
         For a normal random walk: MSD = 4 * D * t.
         Method returns D.
         """
-        X = np.arange(len(self.MSD)).reshape((-1, 1))
+        if timepoints is None:
+            X = np.arange(len(self.MSD)).reshape((-1, 1))
+        else:
+            X = timepoints.reshape((-1, 1))
+
         y = self.MSD
 
         LM = LinearRegression()
