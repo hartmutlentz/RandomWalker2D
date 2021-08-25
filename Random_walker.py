@@ -277,9 +277,12 @@ class CTRandomWalk:
 
         walker_states = []
 
+        verboseprint("Starting CTRW run with ", len(self.walker_list),
+                     " Walkers.")
+
         for i, w in enumerate(self.walker_list):
             states = [(w.x, w.y, w.t, w.get_squared_displacement())]
-            verboseprint("Walker ", i, end=" ")
+            verboseprint(i, end=" ")
 
             while w.t < maxtime:
                 # verboseprint("Processing t=", w.t, " of ", maxtime, "with ",
