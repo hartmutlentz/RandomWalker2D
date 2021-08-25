@@ -398,6 +398,11 @@ class CTRandomWalk:
 
         y = self.MSD
 
+        if len(X) < len(y):
+            y = y[:len(X)]
+        elif len(X) > len(y):
+            X = X[:len(y)]
+
         LM = LinearRegression()
 
         LM.fit(X, y)
@@ -556,17 +561,22 @@ class DataPrep:
 if __name__ == "__main__":
     jump_measurements = [1.5, 1.5, 1.3, 1.6, 2.3, 4., 3.2, 1.8, 1.45]
     jump_kde = gaussian_kde(jump_measurements, bw_method=1e-1)
-    waiting_kde = UniformKdeInt(0, 10)
+
+    measurements_time = np.array([0, 0, 0, 1, 1, 2, 8])
+    waiting_time_dist = EmpiricalDistributionInt(measurements_time)
+
     # jump_kde = gaussian_kde(x)
     # d = DataPrep("test.txt")
     # print(d.t_xy)
     # print(d.get_incidence())
 
     W = RandomWalker2D(jump_kde)
-    R = CTRandomWalk(W, waiting_time_kde=waiting_kde, n_walkers=1)
-    R.run(10)
+    R = CTRandomWalk(W, waiting_time_kde=waiting_time_dist, n_walkers=1)
+    R.run(1000)
     mse = R.MSD
-    print("Diffusion constant =", R.estimate_D())
+
+    newt = np.arange(100)
+    print("Diffusion constant =", R.estimate_D(timepoints=newt))
     # plt.plot(mse)
 
 #    W = RandomWalker_lattice()
