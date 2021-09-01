@@ -14,13 +14,16 @@ import matplotlib.pyplot as plt
 
 
 class EmpiricalDistribution:
-    """ Duck coded distribution.
+    """
+    Duck coded distribution.
 
-        Ensures that the returned value is non negative.
+    Ensures that the returned value is non negative.
     """
 
     def __init__(self, kde):
         """
+        Instanciate a distribution.
+
         Parameters
         ----------
         kde
@@ -33,6 +36,7 @@ class EmpiricalDistribution:
         self.kde = kde
 
     def resample(self, n):
+        """Return a sample."""
         x = self.kde.resample(1)[0]
 
         while x < 0.0:
@@ -50,6 +54,8 @@ class EmpiricalDistributionInt:
 
     def __init__(self, data):
         """
+        Instanciate a distribution.
+
         Parameters
         ----------
         data
