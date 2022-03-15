@@ -102,14 +102,14 @@ class UniformKdeInt:
 class RandomWalkerLattice:
     """Random Walker on a lattice."""
 
-    def __init__(self, x=0, y=0, time=0.0,
-                 time_resolution=0.1):
+    def __init__(self, x=0, y=0, time=0, lattice_constant=1.0):
 
         self.x = int(x)
         self.y = int(y)
         self.t = time
-        self.dt = time_resolution
+        self.lambda = lattice_constant
         # self.waiting_time_kde = waiting_time_kde
+        self.angle_kde = UniformKdeFloat(lower=0.0, upper=2.0*np.pi)
 
         self.squared_displacement = self.get_squared_displacement()
 
@@ -122,8 +122,31 @@ class RandomWalkerLattice:
         return RandomWalkerLattice(self.x, self.y, self.t,
                                    self.dt)
 
-    def step(self):
-        """Random walk step."""
+    def step_d(self, d):
+        """Random walk step with stepsize d.
+            Target site is the closest to distance d from current position.
+        """
+        self.angle_kde = UniformKdeFloat(lower=0.0, upper=2.0*np.pi)
+        course = angle_kde.resample(1)
+
+        dy = np.sin(course) * d
+        dx = np.cos(course) * d
+
+        newx = self.x + dx
+        newy = self.y + dy
+
+        stepsx = round(newx / self.lambda)
+        stepsy = round(newy / self.lambda)
+
+        self.x += stepsx
+        self.y += stepsy
+        
+        self.squared_displacement = self.get_squared_displacement()
+        self.t += 1
+
+
+    def step_nn(self):
+        """Random walk step to nearest neighbor."""
         # dx = self.jump_kde.resample(1)
         # dy = self.jump_kde.resample(1)
         lattice_steps = [(0, 1), (1, 0), (0, -1), (-1, 0)]
@@ -133,7 +156,7 @@ class RandomWalkerLattice:
         self.x += dx
         self.y += dy
         self.squared_displacement = self.get_squared_displacement()
-        self.t += self.dt
+        self.t += 1
 
     def get_squared_displacement(self):
         """Return squared displacement."""
@@ -143,7 +166,7 @@ class RandomWalkerLattice:
         """Perform a random walk over n steps."""
         x, y, r2 = [], [], []
         for i in range(n):
-            self.step()
+            self.step_nn()
             x.append(self.x)
             y.append(self.y)
             r2.append(self.get_squared_displacement())
