@@ -107,7 +107,7 @@ class RandomWalkerLattice:
         self.x = int(x)
         self.y = int(y)
         self.t = time
-        self.lambda = lattice_constant
+        self.lattice_constant = lattice_constant
 
         self.jump_kde = jump_kde
         self.angle_kde = UniformKdeFloat(lower=0.0, upper=2.0*np.pi)
@@ -120,15 +120,15 @@ class RandomWalkerLattice:
 
     def copy(self):
         """Copy."""
-        return RandomWalkerLattice(self.x, self.y, self.t, self.lambda,
-                                    self.jump_kde)
+        return RandomWalkerLattice(self.x, self.y, self.t,
+                                    self.lattice_constant, self.jump_kde)
 
-    def step_d(self):
+    def step(self):
         """Random walk step with stepsize from distribution.
             Target site is the closest to distance from current position.
         """
         d = self.jump_kde.resample(1)[0][0]
-        course = angle_kde.resample(1)
+        course = self.angle_kde.resample(1)
 
         dy = np.sin(course) * d
         dx = np.cos(course) * d
@@ -136,8 +136,8 @@ class RandomWalkerLattice:
         newx = self.x + dx
         newy = self.y + dy
 
-        stepsx = round(newx / self.lambda)
-        stepsy = round(newy / self.lambda)
+        stepsx = round(newx / self.lattice_constant)
+        stepsy = round(newy / self.lattice_constant)
 
         self.x += stepsx
         self.y += stepsy
@@ -600,7 +600,7 @@ if __name__ == "__main__":
     # print(d.t_xy)
     # print(d.get_incidence())
 
-    W = RandomWalker2D(jump_kde)
+    W = RandomWalkerLattice(jump_kde=jump_kde)
     R = CTRandomWalk(W, waiting_time_kde=waiting_time_dist, n_walkers=1)
     R.run(1000)
     mse = R.MSD
