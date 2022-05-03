@@ -102,13 +102,14 @@ class UniformKdeInt:
 class RandomWalkerLattice:
     """Random Walker on a lattice."""
 
-    def __init__(self, x=0, y=0, time=0, lattice_constant=1.0):
+    def __init__(self, x=0, y=0, time=0, lattice_constant=1.0, jump_kde=None):
 
         self.x = int(x)
         self.y = int(y)
         self.t = time
         self.lambda = lattice_constant
-        # self.waiting_time_kde = waiting_time_kde
+
+        self.jump_kde = jump_kde
         self.angle_kde = UniformKdeFloat(lower=0.0, upper=2.0*np.pi)
 
         self.squared_displacement = self.get_squared_displacement()
@@ -119,14 +120,14 @@ class RandomWalkerLattice:
 
     def copy(self):
         """Copy."""
-        return RandomWalkerLattice(self.x, self.y, self.t,
-                                   self.dt)
+        return RandomWalkerLattice(self.x, self.y, self.t, self.lambda,
+                                    self.jump_kde)
 
-    def step_d(self, d):
-        """Random walk step with stepsize d.
-            Target site is the closest to distance d from current position.
+    def step_d(self):
+        """Random walk step with stepsize from distribution.
+            Target site is the closest to distance from current position.
         """
-        self.angle_kde = UniformKdeFloat(lower=0.0, upper=2.0*np.pi)
+        d = self.jump_kde.resample(1)[0][0]
         course = angle_kde.resample(1)
 
         dy = np.sin(course) * d
@@ -140,7 +141,7 @@ class RandomWalkerLattice:
 
         self.x += stepsx
         self.y += stepsy
-        
+
         self.squared_displacement = self.get_squared_displacement()
         self.t += 1
 
