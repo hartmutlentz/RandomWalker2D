@@ -145,7 +145,6 @@ class RandomWalkerLattice:
         self.squared_displacement = self.get_squared_displacement()
         self.t += 1
 
-
     def step_nn(self):
         """Random walk step to nearest neighbor."""
         # dx = self.jump_kde.resample(1)
